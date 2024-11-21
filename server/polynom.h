@@ -65,18 +65,28 @@ TPolynom<number>::TPolynom(const QString& qstrPolynom) {
         polynomStr.remove(0, prefix.length()); // Убираем префикс
     }
 
+
     // Регулярное выражение для извлечения коэффициентов и корней
-    QRegularExpression regex(R"(\(([^)]+)\))");
+    QRegularExpression regex(R"(\(([^)]+)\)|([+-]?\d*\.?\d+))");
     QRegularExpressionMatchIterator it = regex.globalMatch(polynomStr);
-    it.next();
+    it.next(); // Убираем "x" из строки
 
     // Извлечение коэффициента
     if (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
-        QString coefStr = match.captured(1);
-        number coef;
-        coefStr >> coef;
-        this->setCanonicCoef(coef);
+
+        QString coefStr;
+        if (match.lastCapturedIndex() == 1) { // Если в скобках
+            coefStr = match.captured(1);
+        } else if (match.lastCapturedIndex() == 2) { // Если вещественное число
+            coefStr = match.captured(2);
+        }
+
+        if (!coefStr.isEmpty()) {
+            number coef;
+            coefStr >> coef; // Преобразуем строку в число
+            this->setCanonicCoef(coef);
+        }
     }
 
     // Извлечение корней
@@ -89,15 +99,67 @@ TPolynom<number>::TPolynom(const QString& qstrPolynom) {
             rootStr.remove(0, 2); // Убираем "x - "
         }
         if (!rootStr.isEmpty()) {
-            number root; // Функция для парсинга комплексного числа
+            number root; // Функция для парсинга комплексного числа или вещественного
             rootStr >> root;
             arrRoot->appendElement(root); // Добавляем корень в массив
         }
-
     }
 
     this->calcCoefFromRoots();
 }
+
+// template <class number>
+// TPolynom<number>::TPolynom(const QString& qstrPolynom) {
+//     this->printMode = EPrintMode::EPrintModeClassic;
+//     this->arrCoef = new TArray<number>();
+//     this->arrRoot = new TArray<number>();
+
+//     // Удаляем пробелы из строки
+//     QString polynomStr = qstrPolynom.simplified();
+
+//     // Проверяем, начинается ли строка с "P(x)="
+//     const QString prefix = "P(x)=";
+//     if (polynomStr.startsWith(prefix)) {
+//         polynomStr.remove(0, prefix.length()); // Убираем префикс
+//     }
+//     qDebug() << "polynomStr " << polynomStr;
+//     // Регулярное выражение для извлечения коэффициентов и корней
+//     QRegularExpression regex(R"(\(([^)]+)\))");
+//     QRegularExpressionMatchIterator it = regex.globalMatch(polynomStr);
+//     it.next();
+//     QRegularExpressionMatch match1 = it.next();
+//     QString coefStr1 = match1.captured(1);
+//     qDebug() << "coefStr1 " << coefStr1;
+//     // Извлечение коэффициента
+//     if (it.hasNext()) {
+//         QRegularExpressionMatch match = it.next();
+//         QString coefStr = match.captured(1);
+//         number coef;
+//         qDebug() << "TPolynom canonCoef " << coefStr;
+//         coefStr >> coef;
+//         this->setCanonicCoef(coef);
+//     }
+
+//     // Извлечение корней
+//     while (it.hasNext()) {
+//         QRegularExpressionMatch match = it.next();
+//         QString rootStr = match.captured(1);
+
+//         // Удаляем "x - " если присутствует
+//         if (rootStr.startsWith("x-")) {
+//             rootStr.remove(0, 2); // Убираем "x - "
+//         }
+//         if (!rootStr.isEmpty()) {
+//             number root; // Функция для парсинга комплексного числа
+//             qDebug() << "TPolynom root " << rootStr;
+//             rootStr >> root;
+//             arrRoot->appendElement(root); // Добавляем корень в массив
+//         }
+
+//     }
+
+//     this->calcCoefFromRoots();
+// }
 
 template <class number>
 TPolynom<number>::~TPolynom() {

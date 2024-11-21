@@ -217,7 +217,7 @@ TInterface::~TInterface()
 }
 
 void TInterface::clearStrPolynom() {
-    strPolynom = "P(x) = (1+0i)";
+    strPolynom = "P(x) = 1";
 }
 
 void TInterface::showCanonicalForm()

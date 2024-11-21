@@ -35,19 +35,22 @@ void TApplication::recieve(QByteArray msg)
 
     switch (polynomMode) {
     case COMPLEX_MODE: {
+        qDebug() << "hC: " << strMsg;
         answer = handleComplex(strMsg);
         break;
     }
     case REAL_MODE: {
+        qDebug() << "hR: " << strMsg;
         answer = handleReal(strMsg);
         break;
     }
     default: {
+        qDebug() << "default: " << strMsg;
         answer = handleReal(strMsg);
         break; // Когда режим полинома не передан - работаем как в вещ. числами
     }
     }
-
+    qDebug() << "ans: " << answer;
     comm->send(QByteArray().append(answer.toUtf8())); // Отправляем ответ обратно клиенту
 }
 
@@ -69,10 +72,10 @@ QString TApplication::handleComplex(QString &strMsg) {
     }
 
     QString param = strMsg.mid(0, strMsg.indexOf(separatorChar)); // Получаем первый параметр - это должен быть полином
-
+    qDebug() << "handleComplex1";
     TPolynom<TComplex> p(param); // Создание полинома
     p.setPrintMode(EPrintMode::EPrintModeClassic); // Ставим EPrintModeClassic мод для корректной работы
-
+    qDebug() << "handleComplex2";
     strMsg.remove(0, strMsg.indexOf(separatorChar) + 1); // Убираем полином из сообщения
 
     switch (requestType)
@@ -296,9 +299,10 @@ QString TApplication::handleReal(QString &strMsg) {
     }
 
     QString param = strMsg.mid(0, strMsg.indexOf(separatorChar)); // Получаем первый параметр - это должен быть полином
-
+    qDebug() << "handleReal1";
     TPolynom<TRealNumber> p(param); // Создание полинома
     p.setPrintMode(EPrintMode::EPrintModeClassic); // Ставим EPrintModeClassic мод для корректной работы
+    qDebug() << "handleReal2";
 
     strMsg.remove(0, strMsg.indexOf(separatorChar) + 1); // Убираем полином из сообщения
 
@@ -356,32 +360,23 @@ QString TApplication::handleReal(QString &strMsg) {
 
         // логика обработки корней
         QStringList rootsList = strNewRoots.split(' '); // Разделяем строку на части по пробелу
-        if (rootsList.size() != addedCount * 2)
+        if (rootsList.size() != addedCount)
         {
             answer << QString().setNum(CHANGE_ROOTS_COUNT_ANSWER) << "ERR3" << p; // Ответ формата - код_запроса;статус
             break;
         }
 
-        QString arr[2];
-        int iter = 0;
-        for (QString& item : rootsList)
-        {
-            if (!item.isEmpty())
-            { // Проверяем, что часть не пустая
-                arr[iter++] = item;
-            }
-            if (iter == 2)
-            {
-                QString concaetedNum;
-                TRealNumber tmpNum;
-                concaetedNum = arr[0] + " " + arr[1];
-                concaetedNum >> tmpNum;
+        for (QString& item : rootsList) {
+            if (!item.isEmpty()) { // Проверяем, что элемент не пустой
+                if (item.contains("i")) continue;
 
+                TRealNumber tmpNum;
+                item >> tmpNum; // Преобразуем строку в вещественное число
+
+                // Изменяем размер массива корней и добавляем новое значение
                 p.changeArrRootSize(p.getRootsCount() + 1);
                 p.changeRootByIndex(p.getRootsCount() - 1, tmpNum);
                 p.calcCoefFromRoots();
-
-                iter = 0;
             }
         }
         answer << QString().setNum(CHANGE_ROOTS_COUNT_ANSWER) << "OK" << p; // Ответ формата - код_запроса;статус;полином
@@ -417,36 +412,25 @@ QString TApplication::handleReal(QString &strMsg) {
     case SET_NEW_POLYNOMIAL_REQUEST:
     {
         QString canonicCoef = strMsg.mid(0, strMsg.indexOf(separatorChar)); // Первый параметр (после полинома) - канон. коэф
-        QString rootsText = strMsg.mid(strMsg.indexOf(separatorChar)); // Второй параметр (после полинома) - корни, строкой
+        QString rootsText = strMsg.mid(strMsg.indexOf(separatorChar) + 1); // Второй параметр (после полинома) - корни, строкой
 
         TRealNumber newCanonicCoef;
         canonicCoef >> newCanonicCoef;
         p.setCanonicCoef(newCanonicCoef);
 
         QStringList rootsList = rootsText.split(' '); // Разделяем строку корней на части по пробелу
-        QString arr[2] = {};
-        int tmp = 0;
+        for (QString& item : rootsList) {
+            if (!item.isEmpty()) { // Проверяем, что элемент не пустой
+                if (item.contains("i")) continue;
 
-        for (QString& rootText : rootsList)
-        {
-            if (!rootText.isEmpty())
-            { // Проверяем, что часть не пустая
-                arr[tmp++] = rootText;
+                TRealNumber tmpNum;
+                item >> tmpNum; // Преобразуем строку в вещественное число
+
+                // Изменяем размер массива корней и добавляем новое значение
+                p.changeArrRootSize(p.getRootsCount() + 1);
+                p.changeRootByIndex(p.getRootsCount() - 1, tmpNum);
+                p.calcCoefFromRoots();
             }
-
-            if (tmp == 2)
-            {
-                QString concaetedNum;
-                TRealNumber newRoot;
-
-                concaetedNum = arr[0] + " " + arr[1];
-                concaetedNum >> newRoot;
-
-                p.addRoot(newRoot);
-
-                tmp = 0;
-            }
-
         }
 
         answer << QString().setNum(SET_NEW_POLYNOMIAL_ANSWER) << "OK" << p; // Ответ формата - код_запроса;статус;полином
@@ -465,29 +449,18 @@ QString TApplication::handleReal(QString &strMsg) {
     case ADD_ROOTS_REQUEST: {
         // Единственный параметр (после полинома) - строка новых корней
         QStringList rootsList = strMsg.split(' '); // Разделяем строку корней на части по пробелу
-        QString arr[2] = {};
-        int tmp = 0;
+        for (QString& item : rootsList) {
+            if (!item.isEmpty()) { // Проверяем, что элемент не пустой
+                if (item.contains("i")) continue;
 
-        for (QString& rootText : rootsList)
-        {
-            if (!rootText.isEmpty())
-            { // Проверяем, что часть не пустая
-                arr[tmp++] = rootText;
+                TRealNumber tmpNum;
+                item >> tmpNum; // Преобразуем строку в вещественное число
+
+                // Изменяем размер массива корней и добавляем новое значение
+                p.changeArrRootSize(p.getRootsCount() + 1);
+                p.changeRootByIndex(p.getRootsCount() - 1, tmpNum);
+                p.calcCoefFromRoots();
             }
-
-            if (tmp == 2)
-            {
-                QString concaetedNum;
-                TRealNumber newRoot;
-
-                concaetedNum = arr[0] + " " + arr[1];
-                concaetedNum >> newRoot;
-
-                p.addRoot(newRoot);
-
-                tmp = 0;
-            }
-
         }
 
         answer << QString().setNum(ADD_ROOTS_ANSWER) << "OK" << p; // Ответ формата - код_запроса;статус;полином
