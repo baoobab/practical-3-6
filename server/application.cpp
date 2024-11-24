@@ -186,7 +186,13 @@ QString TApplication::handleComplex(QString &strMsg) {
     case SET_NEW_POLYNOMIAL_REQUEST:
     {
         QString canonicCoef = strMsg.mid(0, strMsg.indexOf(separatorChar)); // Первый параметр (после полинома) - канон. коэф
-        QString rootsText = strMsg.mid(strMsg.indexOf(separatorChar)); // Второй параметр (после полинома) - корни, строкой
+        QString rootsText = strMsg.mid(strMsg.indexOf(separatorChar)+1); // Второй параметр (после полинома) - корни, строкой
+
+        // Избавляемся от лишних символов, если они есть
+        rootsText.replace("(", "");
+        rootsText.replace(")", "");
+        rootsText.replace("+", " ");
+        rootsText.replace("-", " -");
 
         TComplex newCanonicCoef;
         canonicCoef >> newCanonicCoef;

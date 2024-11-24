@@ -10,7 +10,7 @@
 TInterface::TInterface(QWidget *parent)
     : QWidget(parent)
 {
-    setWindowTitle("Многочлен на комплексных числах");
+    setWindowTitle("Многочлен на компл./вещ. числах");
     setMaximumSize(600, 300);
 
     // Создаём метку и поле вывода
