@@ -169,10 +169,13 @@ TInterface::TInterface(QWidget *parent)
 
     // strPolynom используется для сохранения текущего состояния полинома, очищаем её
     clearStrPolynom();
+
+    tempOutputField = nullptr;
 }
 
 TInterface::~TInterface()
 {
+    delete tempOutputField;
 
     delete c_mode;
     delete r_mode;
@@ -307,7 +310,7 @@ void TInterface::changeRootAndAN(QString& anText, QString& indexText)
     // Метка и readonly поле для старого корня
     QLabel* oldRootLabel = new QLabel("Текущий полином (нумерация корней с нуля):", dialog);
     QLineEdit* oldRootField = new QLineEdit(dialog);
-
+    tempOutputField = oldRootField;
 
     oldRootField->setText(strPolynom);
     oldRootField->setReadOnly(true);
@@ -419,6 +422,8 @@ void TInterface::answer(const QString& response)
 
         strPolynom = strMsg; // Остальная часть ответа - полином
         outputField->setText(strPolynom);
+        if (tempOutputField) tempOutputField->setText(strPolynom);
+        tempOutputField = nullptr;
         break;
     case SET_NEW_POLYNOMIAL_ANSWER:
     {

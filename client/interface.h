@@ -32,6 +32,8 @@ public slots:
 signals:
     void request(QString);
 private:
+    QLineEdit *tempOutputField;
+
     QString strPolynom; // Строка для хранения текущего полинома
 
     QRadioButton *c_mode; // Режим полинома - комплексные числа

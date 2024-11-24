@@ -31,26 +31,21 @@ void TApplication::recieve(QByteArray msg)
 
     int polynomMode = strMsg.left(pos).toInt(); // Получаем режим полинома
     strMsg = strMsg.mid(pos + 1); // Убираем режим полинома из сообщения
-    qDebug() << "Pmode " << polynomMode;
 
     switch (polynomMode) {
     case COMPLEX_MODE: {
-        qDebug() << "hC: " << strMsg;
         answer = handleComplex(strMsg);
         break;
     }
     case REAL_MODE: {
-        qDebug() << "hR: " << strMsg;
         answer = handleReal(strMsg);
         break;
     }
     default: {
-        qDebug() << "default: " << strMsg;
         answer = handleReal(strMsg);
         break; // Когда режим полинома не передан - работаем как в вещ. числами
     }
     }
-    qDebug() << "ans: " << answer;
     comm->send(QByteArray().append(answer.toUtf8())); // Отправляем ответ обратно клиенту
 }
 
@@ -72,10 +67,8 @@ QString TApplication::handleComplex(QString &strMsg) {
     }
 
     QString param = strMsg.mid(0, strMsg.indexOf(separatorChar)); // Получаем первый параметр - это должен быть полином
-    qDebug() << "handleComplex1";
     TPolynom<TComplex> p(param); // Создание полинома
     p.setPrintMode(EPrintMode::EPrintModeClassic); // Ставим EPrintModeClassic мод для корректной работы
-    qDebug() << "handleComplex2";
     strMsg.remove(0, strMsg.indexOf(separatorChar) + 1); // Убираем полином из сообщения
 
     switch (requestType)
@@ -299,10 +292,8 @@ QString TApplication::handleReal(QString &strMsg) {
     }
 
     QString param = strMsg.mid(0, strMsg.indexOf(separatorChar)); // Получаем первый параметр - это должен быть полином
-    qDebug() << "handleReal1";
     TPolynom<TRealNumber> p(param); // Создание полинома
     p.setPrintMode(EPrintMode::EPrintModeClassic); // Ставим EPrintModeClassic мод для корректной работы
-    qDebug() << "handleReal2";
 
     strMsg.remove(0, strMsg.indexOf(separatorChar) + 1); // Убираем полином из сообщения
 
